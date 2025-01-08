@@ -1,0 +1,251 @@
+esphome:
+  name: alarm1
+  friendly_name: Alarm1
+  includes:
+    - ../uart_read_line_sensor.h
+# try without custom - https://community.home-assistant.io/t/how-to-uart-read-without-custom-component/491950
+  on_boot:
+  - priority: 200
+    then:
+    - uart.write: "?\n"
+
+#esp8266:
+#  board: d1_mini
+
+
+esp32:
+  board: esp32-s2-saola-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+#  level: VERBOSE #makes uart stream available in esphome logstream
+#  baud_rate: 0 #disable logging over uart
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "**********************************"
+
+ota:
+  - platform: esphome
+    password: "******************************"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  #ap:
+  #  ssid: "Alarm1 Fallback Hotspot"
+  #  password: "9srvH2PYfzoX"
+  
+
+captive_portal:
+
+
+# Set up the UART component
+uart:
+ id: uart_bus
+ #tx_pin: GPIO1  # TX pin (D10)
+ #rx_pin: GPIO3  # RX pin (D9)
+ tx_pin: GPIO39
+ rx_pin: GPIO37
+ baud_rate: 9600
+ debug:
+  direction: RX
+#  direction: BOTH
+  dummy_receiver: false
+  after:
+   delimiter: "\n"
+  sequence:
+    - lambda: |-
+        UARTDebug::log_string(direction, bytes);
+#        std::string cmd(bytes.begin(), bytes.end());
+#        std::string str(bytes.begin(), bytes.end());
+#        if (sscanf(str.c_str(), "%c", &cmd) == 1 ) {
+#         if (cmd == "AA") {
+#          id(alarm1_status).publish_state("Armed");
+#         } else if(cmd == "DA") {
+#          id(alarm1_status).publish_state("Disarmed");
+#         } else if(cmd == "EAA") {
+#          id(alarm1_status).publish_state("Arming");
+#         }
+#        }
+#causes reboot loop          
+
+#        std::istringstream some_stream(str);
+#        some_stream >> cmd;
+
+text_sensor:
+- platform: custom
+  lambda: |-
+    auto my_custom_sensor = new UartReadLineSensor(id(uart_bus));
+    App.register_component(my_custom_sensor);
+    return {my_custom_sensor};
+  text_sensors:
+    id: "uart_readline"
+    on_value:
+      then:
+       lambda: |-
+         if (id(uart_readline).state == "AA") {
+          id(alarm1_status).publish_state("Armed");
+         } else if(id(uart_readline).state == "DA") {
+          id(alarm1_status).publish_state("Disarmed");
+         } else if(id(uart_readline).state == "EAA") {
+          id(alarm1_status).publish_state("Arming");
+         }
+         if (id(uart_readline).state == "ZO001" || id(uart_readline).state == "\rZO001" || id(uart_readline).state == "ZA001") {
+          id(alarm1_zone1).publish_state(true);
+         } else if(id(uart_readline).state == "ZC001" || id(uart_readline).state == "\rZC001" || id(uart_readline).state == "ZR001") {
+          id(alarm1_zone1).publish_state(false);
+         }
+         if (id(uart_readline).state == "ZO002" || id(uart_readline).state == "\rZO002" || id(uart_readline).state == "ZA002") {
+          id(alarm1_zone2).publish_state(true);
+         } else if(id(uart_readline).state == "ZC002" || id(uart_readline).state == "\rZC002" || id(uart_readline).state == "ZR002") {
+          id(alarm1_zone2).publish_state(false);
+         }
+         if (id(uart_readline).state == "ZO003" || id(uart_readline).state == "\rZO003" || id(uart_readline).state == "ZA003") {
+          id(alarm1_zone3).publish_state(true);
+         } else if(id(uart_readline).state == "ZC003" || id(uart_readline).state == "\rZC003" || id(uart_readline).state == "ZR003") {
+          id(alarm1_zone3).publish_state(false);
+         }
+         if (id(uart_readline).state == "ZO004" || id(uart_readline).state == "\rZO004" || id(uart_readline).state == "ZA004") {
+          id(alarm1_zone4).publish_state(true);
+         } else if(id(uart_readline).state == "ZC004" || id(uart_readline).state == "\rZC004" || id(uart_readline).state == "ZR004") {
+          id(alarm1_zone4).publish_state(false);
+         }
+         if (id(uart_readline).state == "ZO005" || id(uart_readline).state == "\rZO005" || id(uart_readline).state == "ZA005") {
+          id(alarm1_zone5).publish_state(true);
+         } else if(id(uart_readline).state == "ZC005" || id(uart_readline).state == "\rZC005" || id(uart_readline).state == "ZR005") {
+          id(alarm1_zone5).publish_state(false);
+         }
+         if (id(uart_readline).state == "ZO006" || id(uart_readline).state == "\rZO006" || id(uart_readline).state == "ZA006") {
+          id(alarm1_zone6).publish_state(true);
+         } else if(id(uart_readline).state == "ZC006" || id(uart_readline).state == "\rZC006" || id(uart_readline).state == "ZR006") {
+          id(alarm1_zone6).publish_state(false);
+         }
+         if (id(uart_readline).state == "ZO007" || id(uart_readline).state == "\rZO007" || id(uart_readline).state == "ZA007") {
+          id(alarm1_zone7).publish_state(true);
+         } else if(id(uart_readline).state == "ZC007" || id(uart_readline).state == "\rZC007" || id(uart_readline).state == "ZR007") {
+          id(alarm1_zone7).publish_state(false);
+         }
+         if (id(uart_readline).state == "OO001" || id(uart_readline).state == "\rOO001") {
+          id(alarm1_status).publish_state("Triggered");
+          id(alarm1_output1).publish_state(true);
+         } else if(id(uart_readline).state == "OR001" || id(uart_readline).state == "\rOR001") {
+          id(alarm1_output1).publish_state(false);
+         }
+         if (id(uart_readline).state == "OO002" || id(uart_readline).state == "\rOO002") {
+          id(alarm1_output2).publish_state(true);
+         } else if(id(uart_readline).state == "OR002" || id(uart_readline).state == "\rOR002") {
+          id(alarm1_output2).publish_state(false);
+         }
+         if (id(uart_readline).state.find("ZA") != std::string::npos) {
+          id(alarm1_status).publish_state("Triggered");
+         }
+         if (id(uart_readline).state.find("ZR") != std::string::npos) {
+          id(updatestatus).press();
+         }
+         if (id(uart_readline).state == "BF") {
+          id(alarm1_battery).publish_state(true);
+         } else if(id(uart_readline).state == "BR") {
+          id(alarm1_battery).publish_state(false);
+         }
+         if (id(uart_readline).state == "NR") {
+          id(alarm1_ready).publish_state(true);
+         } else if(id(uart_readline).state == "RO") {
+          id(alarm1_ready).publish_state(false);
+         }
+         if (id(uart_readline).state.find("MR") != std::string::npos) {
+          id(alarm1_mains).publish_state(true);
+         }
+         if (id(uart_readline).state.find("MF") != std::string::npos) {
+          id(alarm1_mains).publish_state(false);
+         }
+
+
+- platform: template
+  id: alarm1_status
+  name: "Alarm Status"
+
+sensor:
+
+binary_sensor:
+ - platform: template
+   name: "Z1 - Solar Controller"
+   id: alarm1_zone1
+   device_class: door
+ - platform: template
+   name: "Z2 - PA Door 1"
+   id: alarm1_zone2
+   device_class: door
+ - platform: template
+   name: "Z3 - Roller Door 1"
+   id: alarm1_zone3
+   device_class: garage_door
+ - platform: template
+   name: "Z4 - Roller Door 2"
+   id: alarm1_zone4
+   device_class: garage_door
+ - platform: template
+   name: "Z5 - PA Door 2"
+   id: alarm1_zone5
+   device_class: door
+ - platform: template
+   name: "Z6 - PA Door 3"
+   id: alarm1_zone6
+   device_class: door
+ - platform: template
+   name: "Z7 - Smoke Detector"
+   id: alarm1_zone7
+   device_class: smoke
+ - platform: template
+   name: "Ext Siren"
+   id: alarm1_output1
+#   device_class: sound
+ - platform: template
+   name: "Int Siren"
+   id: alarm1_output2
+#   device_class: sound
+ - platform: template
+   name: "Ready"
+   id: alarm1_ready
+   device_class: problem
+ - platform: template
+   id: alarm1_battery
+   name: "Battery"
+   device_class: battery
+ - platform: template
+   id: alarm1_mains
+   name: "Mains"
+   device_class: power
+
+
+switch:
+  - platform: template
+    name: "Switch"
+    turn_on_action:
+      - uart.write: "KEYS_E\n"
+      - delay: 1s
+      - uart.write: "KEYS_123E\n"
+    turn_off_action:
+      - uart.write: "KEYS_E\n"
+      - delay: 1s      
+      - uart.write: "KEYS_123E\n"
+
+button:
+ - platform: template
+   name: "UpdateStatus"
+   id: "updatestatus"
+   on_press:
+    then:
+      - uart.write: "?\n"
+ - platform: template
+   name: "Arm/Disarm"
+   on_press:
+    then:
+      - uart.write: "KEYS_E\n"
+      - delay: 1s
+      - uart.write: "KEYS_123E\n"
