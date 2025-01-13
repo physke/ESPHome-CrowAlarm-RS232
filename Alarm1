@@ -1,9 +1,6 @@
 esphome:
   name: alarm1
   friendly_name: Alarm1
-  includes:
-    - ../uart_read_line_sensor.h
-# try without custom - https://community.home-assistant.io/t/how-to-uart-read-without-custom-component/491950
   on_boot:
   - priority: 200
     then:
@@ -41,6 +38,8 @@ wifi:
   #  ssid: "Alarm1 Fallback Hotspot"
   #  password: "9srvH2PYfzoX"
   
+web_server:
+  port: 80
 
 captive_portal:
 
@@ -55,120 +54,107 @@ uart:
  baud_rate: 9600
  debug:
   direction: RX
-#  direction: BOTH
-  dummy_receiver: false
+  dummy_receiver: true
   after:
    delimiter: "\n"
   sequence:
     - lambda: |-
         UARTDebug::log_string(direction, bytes);
-#        std::string cmd(bytes.begin(), bytes.end());
-#        std::string str(bytes.begin(), bytes.end());
-#        if (sscanf(str.c_str(), "%c", &cmd) == 1 ) {
-#         if (cmd == "AA") {
-#          id(alarm1_status).publish_state("Armed");
-#         } else if(cmd == "DA") {
-#          id(alarm1_status).publish_state("Disarmed");
-#         } else if(cmd == "EAA") {
-#          id(alarm1_status).publish_state("Arming");
-#         }
-#        }
-#causes reboot loop          
+        std::string str(bytes.begin(), bytes.end());
 
-#        std::istringstream some_stream(str);
-#        some_stream >> cmd;
+        //watch for potential problems with non printable or special characters in string
+        id(rawString).publish_state(str.c_str());
+
+        if (id(rawString).state.find("EAA") != std::string::npos) {
+         id(alarm1_status).publish_state("Arming");
+        }else if (id(rawString).state.find("DA") != std::string::npos) {
+         id(alarm1_status).publish_state("Disarmed");
+        }else if (id(rawString).state.find("AA") != std::string::npos) {
+         id(alarm1_status).publish_state("Armed");
+        }
+        if (id(rawString).state.find("ZO001") != std::string::npos || id(rawString).state.find("ZA001") != std::string::npos) {
+         id(alarm1_zone1).publish_state(true);
+        }else if (id(rawString).state.find("ZC001") != std::string::npos || id(rawString).state.find("ZR001") != std::string::npos) {
+         id(alarm1_zone1).publish_state(false);
+        }
+        if (id(rawString).state.find("ZO002") != std::string::npos || id(rawString).state.find("ZA002") != std::string::npos) {
+         id(alarm1_zone2).publish_state(true);
+        }else if (id(rawString).state.find("ZC002") != std::string::npos || id(rawString).state.find("ZR002") != std::string::npos) {
+         id(alarm1_zone2).publish_state(false);
+        }
+        if (id(rawString).state.find("ZO003") != std::string::npos || id(rawString).state.find("ZA003") != std::string::npos) {
+         id(alarm1_zone3).publish_state(true);
+        }else if (id(rawString).state.find("ZC003") != std::string::npos || id(rawString).state.find("ZR003") != std::string::npos) {
+         id(alarm1_zone3).publish_state(false);
+        }
+        if (id(rawString).state.find("ZO004") != std::string::npos || id(rawString).state.find("ZA004") != std::string::npos) {
+         id(alarm1_zone4).publish_state(true);
+        }else if (id(rawString).state.find("ZC004") != std::string::npos || id(rawString).state.find("ZR004") != std::string::npos) {
+         id(alarm1_zone4).publish_state(false);
+        }
+        if (id(rawString).state.find("ZO005") != std::string::npos || id(rawString).state.find("ZA005") != std::string::npos) {
+         id(alarm1_zone5).publish_state(true);
+        }else if (id(rawString).state.find("ZC005") != std::string::npos || id(rawString).state.find("ZR005") != std::string::npos) {
+         id(alarm1_zone5).publish_state(false);
+        }
+        if (id(rawString).state.find("ZO006") != std::string::npos || id(rawString).state.find("ZA006") != std::string::npos) {
+         id(alarm1_zone6).publish_state(true);
+        }else if (id(rawString).state.find("ZC006") != std::string::npos || id(rawString).state.find("ZR006") != std::string::npos) {
+         id(alarm1_zone6).publish_state(false);
+        }
+        if (id(rawString).state.find("ZO007") != std::string::npos || id(rawString).state.find("ZA007") != std::string::npos) {
+         id(alarm1_zone7).publish_state(true);
+        }else if (id(rawString).state.find("ZC007") != std::string::npos || id(rawString).state.find("ZR007") != std::string::npos) {
+         id(alarm1_zone7).publish_state(false);
+        }
+        if (id(rawString).state.find("ZO008") != std::string::npos || id(rawString).state.find("ZA008") != std::string::npos) {
+         id(alarm1_zone8).publish_state(true);
+        }else if (id(rawString).state.find("ZC008") != std::string::npos || id(rawString).state.find("ZR008") != std::string::npos) {
+         id(alarm1_zone8).publish_state(false);
+        }
+        if (id(rawString).state.find("OO001") != std::string::npos) {
+         id(alarm1_status).publish_state("Triggered");
+         id(alarm1_output1).publish_state(true);
+        }else if (id(rawString).state.find("OR001") != std::string::npos) {
+         id(alarm1_output1).publish_state(false);
+        }
+        if (id(rawString).state.find("OO002") != std::string::npos) {
+         id(alarm1_status).publish_state("Triggered");
+         id(alarm1_output2).publish_state(true);
+        }else if (id(rawString).state.find("OR002") != std::string::npos) {
+         id(alarm1_output2).publish_state(false);
+        }
+        if (id(rawString).state.find("ZA") != std::string::npos) {
+         id(alarm1_status).publish_state("Triggered");
+        }
+        if (id(rawString).state.find("ZR") != std::string::npos) {
+         id(updatestatus).press();
+        }
+        if (id(rawString).state.find("BF") != std::string::npos) {
+         id(alarm1_battery).publish_state(true);
+        }else if (id(rawString).state.find("BR") != std::string::npos) {
+         id(alarm1_battery).publish_state(false);
+        }
+        if (id(rawString).state.find("NR") != std::string::npos) {
+         id(alarm1_ready).publish_state(true);
+        }else if (id(rawString).state.find("RO") != std::string::npos) {
+         id(alarm1_ready).publish_state(false);
+        }
+        if (id(rawString).state.find("MR") != std::string::npos) {
+         id(alarm1_mains).publish_state(true);
+        }else if (id(rawString).state.find("MF") != std::string::npos) {
+         id(alarm1_mains).publish_state(false);
+        }
+
 
 text_sensor:
-- platform: custom
-  lambda: |-
-    auto my_custom_sensor = new UartReadLineSensor(id(uart_bus));
-    App.register_component(my_custom_sensor);
-    return {my_custom_sensor};
-  text_sensors:
-    id: "uart_readline"
-    on_value:
-      then:
-       lambda: |-
-         if (id(uart_readline).state == "AA") {
-          id(alarm1_status).publish_state("Armed");
-         } else if(id(uart_readline).state == "DA") {
-          id(alarm1_status).publish_state("Disarmed");
-         } else if(id(uart_readline).state == "EAA") {
-          id(alarm1_status).publish_state("Arming");
-         }
-         if (id(uart_readline).state == "ZO001" || id(uart_readline).state == "\rZO001" || id(uart_readline).state == "ZA001") {
-          id(alarm1_zone1).publish_state(true);
-         } else if(id(uart_readline).state == "ZC001" || id(uart_readline).state == "\rZC001" || id(uart_readline).state == "ZR001") {
-          id(alarm1_zone1).publish_state(false);
-         }
-         if (id(uart_readline).state == "ZO002" || id(uart_readline).state == "\rZO002" || id(uart_readline).state == "ZA002") {
-          id(alarm1_zone2).publish_state(true);
-         } else if(id(uart_readline).state == "ZC002" || id(uart_readline).state == "\rZC002" || id(uart_readline).state == "ZR002") {
-          id(alarm1_zone2).publish_state(false);
-         }
-         if (id(uart_readline).state == "ZO003" || id(uart_readline).state == "\rZO003" || id(uart_readline).state == "ZA003") {
-          id(alarm1_zone3).publish_state(true);
-         } else if(id(uart_readline).state == "ZC003" || id(uart_readline).state == "\rZC003" || id(uart_readline).state == "ZR003") {
-          id(alarm1_zone3).publish_state(false);
-         }
-         if (id(uart_readline).state == "ZO004" || id(uart_readline).state == "\rZO004" || id(uart_readline).state == "ZA004") {
-          id(alarm1_zone4).publish_state(true);
-         } else if(id(uart_readline).state == "ZC004" || id(uart_readline).state == "\rZC004" || id(uart_readline).state == "ZR004") {
-          id(alarm1_zone4).publish_state(false);
-         }
-         if (id(uart_readline).state == "ZO005" || id(uart_readline).state == "\rZO005" || id(uart_readline).state == "ZA005") {
-          id(alarm1_zone5).publish_state(true);
-         } else if(id(uart_readline).state == "ZC005" || id(uart_readline).state == "\rZC005" || id(uart_readline).state == "ZR005") {
-          id(alarm1_zone5).publish_state(false);
-         }
-         if (id(uart_readline).state == "ZO006" || id(uart_readline).state == "\rZO006" || id(uart_readline).state == "ZA006") {
-          id(alarm1_zone6).publish_state(true);
-         } else if(id(uart_readline).state == "ZC006" || id(uart_readline).state == "\rZC006" || id(uart_readline).state == "ZR006") {
-          id(alarm1_zone6).publish_state(false);
-         }
-         if (id(uart_readline).state == "ZO007" || id(uart_readline).state == "\rZO007" || id(uart_readline).state == "ZA007") {
-          id(alarm1_zone7).publish_state(true);
-         } else if(id(uart_readline).state == "ZC007" || id(uart_readline).state == "\rZC007" || id(uart_readline).state == "ZR007") {
-          id(alarm1_zone7).publish_state(false);
-         }
-         if (id(uart_readline).state == "OO001" || id(uart_readline).state == "\rOO001") {
-          id(alarm1_status).publish_state("Triggered");
-          id(alarm1_output1).publish_state(true);
-         } else if(id(uart_readline).state == "OR001" || id(uart_readline).state == "\rOR001") {
-          id(alarm1_output1).publish_state(false);
-         }
-         if (id(uart_readline).state == "OO002" || id(uart_readline).state == "\rOO002") {
-          id(alarm1_output2).publish_state(true);
-         } else if(id(uart_readline).state == "OR002" || id(uart_readline).state == "\rOR002") {
-          id(alarm1_output2).publish_state(false);
-         }
-         if (id(uart_readline).state.find("ZA") != std::string::npos) {
-          id(alarm1_status).publish_state("Triggered");
-         }
-         if (id(uart_readline).state.find("ZR") != std::string::npos) {
-          id(updatestatus).press();
-         }
-         if (id(uart_readline).state == "BF") {
-          id(alarm1_battery).publish_state(true);
-         } else if(id(uart_readline).state == "BR") {
-          id(alarm1_battery).publish_state(false);
-         }
-         if (id(uart_readline).state == "NR") {
-          id(alarm1_ready).publish_state(true);
-         } else if(id(uart_readline).state == "RO") {
-          id(alarm1_ready).publish_state(false);
-         }
-         if (id(uart_readline).state.find("MR") != std::string::npos) {
-          id(alarm1_mains).publish_state(true);
-         }
-         if (id(uart_readline).state.find("MF") != std::string::npos) {
-          id(alarm1_mains).publish_state(false);
-         }
-
-
-- platform: template
-  id: alarm1_status
-  name: "Alarm Status"
+ - platform: template
+   #name: "Raw String"
+   internal: true
+   id: "rawString"
+ - platform: template
+   id: alarm1_status
+   name: "Alarm Status"
 
 sensor:
 
@@ -202,6 +188,10 @@ binary_sensor:
    id: alarm1_zone7
    device_class: smoke
  - platform: template
+   name: "Z8 - Container Door"
+   id: alarm1_zone8
+   device_class: door
+- platform: template
    name: "Ext Siren"
    id: alarm1_output1
 #   device_class: sound
@@ -222,19 +212,6 @@ binary_sensor:
    name: "Mains"
    device_class: power
 
-
-switch:
-  - platform: template
-    name: "Switch"
-    turn_on_action:
-      - uart.write: "KEYS_E\n"
-      - delay: 1s
-      - uart.write: "KEYS_123E\n"
-    turn_off_action:
-      - uart.write: "KEYS_E\n"
-      - delay: 1s      
-      - uart.write: "KEYS_123E\n"
-
 button:
  - platform: template
    name: "UpdateStatus"
@@ -247,5 +224,16 @@ button:
    on_press:
     then:
       - uart.write: "KEYS_E\n"
-      - delay: 1s
+      - delay: 500ms
       - uart.write: "KEYS_123E\n"
+
+switch:
+  - platform: gpio
+    id: container_door
+    name: "Container Door"
+    pin:
+     number: GPIO14
+     inverted: true
+     mode:
+      output: true
+      open_drain: true
